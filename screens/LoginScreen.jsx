@@ -10,12 +10,31 @@ import {
 import PhotoBG from "../assets/img/PhotoBGFull.png";
 
 import ButtonComp from "../components/Button";
+import { loginDB } from "../db/auth";
+import { submit } from "../redux/userSlice";
+import { useDispatch } from "react-redux";
+import { auth } from "../db/config";
 
 const LoginScreen = ({ navigation }) => {
+  const dispatch = useDispatch();
   const [showPassword, setShowPassword] = useState(false);
   const [password, setPassword] = useState("");
-  const handleSubmit = (e) => {
-    console.log(e);
+  const [email, setEmail] = useState("");
+
+  const handleSubmit = async (e) => {
+    if (email !== "" && password !== "") {
+      await loginDB({ email, password });
+      const user = await auth.currentUser;
+      dispatch(
+        submit({ name: user.displayName, email: user.email, uid: user.uid })
+      );
+
+      setEmail("");
+      setPassword("");
+      navigation.navigate("Home");
+    } else {
+      alert("There are empty fields");
+    }
   };
   return (
     <View style={styles.container}>
@@ -25,6 +44,8 @@ const LoginScreen = ({ navigation }) => {
           <TextInput
             placeholder="Адреса електронної пошти"
             style={styles.input}
+            value={email}
+            onChangeText={(text) => setEmail(text)}
           />
           <View>
             <TextInput

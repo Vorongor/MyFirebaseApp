@@ -11,10 +11,11 @@ import {
 import * as ImagePicker from "expo-image-picker";
 import PhotoBG from "../assets/img/PhotoBGFull.png";
 import { Svg, Path } from "react-native-svg";
-// import avatar from "../img/Rectangle.jpg";
 import ButtonComp from "../components/Button";
 import { useDispatch } from "react-redux";
 import { submit } from "../redux/userSlice";
+import { registerDB, updateUserProfile } from "../db/auth";
+import { auth } from "../db/config";
 
 const RegistrationScreen = ({ navigation }) => {
   const dispatch = useDispatch();
@@ -23,6 +24,10 @@ const RegistrationScreen = ({ navigation }) => {
   const [login, setLogin] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const handleCleanPhoto = () => {
+    setPhoto(null);
+  };
 
   const handleChoosePhoto = async () => {
     const options = {
@@ -46,10 +51,19 @@ const RegistrationScreen = ({ navigation }) => {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (login !== "" && email !== "" && password !== "") {
-      dispatch(submit({ login, email, password }));
-      setEmail(""), setLogin(""), setPassword(), navigation.navigate("Home");
+      await registerDB({ email, password });
+      await updateUserProfile({ displayName: login });
+      const user = await auth.currentUser;
+      dispatch(
+        submit({ name: user.displayName, email: user.email, uid: user.uid })
+      );
+
+      setEmail("");
+      setLogin("");
+      setPassword("");
+      navigation.navigate("Home");
     } else {
       alert("There are empty fields");
     }
@@ -61,8 +75,9 @@ const RegistrationScreen = ({ navigation }) => {
         <View style={styles.form}>
           <View style={styles.imgBox}>
             <Image source={{ uri: photo }} style={styles.photo} />
-            <TouchableOpacity onPress={handleChoosePhoto}>
-              {photo ? (
+
+            {photo ? (
+              <TouchableOpacity onPress={handleCleanPhoto}>
                 <Svg
                   width="30"
                   height="30"
@@ -72,7 +87,9 @@ const RegistrationScreen = ({ navigation }) => {
                   <Path d="M512 65C264.6 65 64 265.6 64 513s200.6 448 448 448 448-200.6 448-448S759.4 65 512 65zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z" />
                   <Path d="M685.4 354.8c0-4.4-3.6-8-8-8l-66 .3L512 465.6l-99.3-118.4-66.1-.3c-4.4 0-8 3.5-8 8 0 1.9.7 3.7 1.9 5.2l130.1 155L340.5 670a8.32 8.32 0 00-1.9 5.2c0 4.4 3.6 8 8 8l66.1-.3L512 564.4l99.3 118.4 66 .3c4.4 0 8-3.5 8-8 0-1.9-.7-3.7-1.9-5.2L553.5 515l130.1-155c1.2-1.4 1.8-3.3 1.8-5.2z" />
                 </Svg>
-              ) : (
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity onPress={handleChoosePhoto}>
                 <Svg
                   width="30"
                   height="30"
@@ -82,8 +99,8 @@ const RegistrationScreen = ({ navigation }) => {
                   <Path d="M696 480H544V328c0-4.4-3.6-8-8-8h-48c-4.4 0-8 3.6-8 8v152H328c-4.4 0-8 3.6-8 8v48c0 4.4 3.6 8 8 8h152v152c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V544h152c4.4 0 8-3.6 8-8v-48c0-4.4-3.6-8-8-8z" />
                   <Path d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z" />
                 </Svg>
-              )}
-            </TouchableOpacity>
+              </TouchableOpacity>
+            )}
           </View>
           <Text style={styles.text}>Реєстрація</Text>
           <TextInput

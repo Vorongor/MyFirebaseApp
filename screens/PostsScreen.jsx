@@ -4,10 +4,30 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Svg, Path } from "react-native-svg";
 import avatarUrl from "../assets/img/Rectangle.jpg";
 import { useSelector } from "react-redux";
+import { useState } from "react";
+import { useEffect } from "react";
+import { getDataFromFirestore } from "../db/data";
+import { FlatList } from "react-native";
 
 const PostsScreen = ({ navigation }) => {
+  const [data, setData] = useState([]);
   const user = useSelector((state) => state.user.newUser);
 
+  useEffect(() => {
+    // Викликаємо функцію getDataFromFirestore під час рендеру компонента
+    const fetchData = async () => {
+      try {
+        const result = await getDataFromFirestore(); // Отримуємо дані з Firestore
+        setData(result); // Оновлюємо стан з отриманими даними
+      } catch (error) {
+        console.error("Помилка при отриманні даних з Firestore:", error);
+      }
+    };
+
+    fetchData(); // Викликаємо функцію для отримання даних
+  }, []); // Порожній масив відслідковуваних залежностей вказує, що ефект має бути запущений лише після першого рендеру
+
+  console.log(data);
   return (
     <SafeAreaView>
       <View style={styles.container}>
@@ -44,12 +64,47 @@ const PostsScreen = ({ navigation }) => {
             </Text>
           </TouchableOpacity>
         </View>
-        <View style={styles.box}>
+        <TouchableOpacity
+          style={styles.box}
+          onPress={() => navigation.navigate("User")}
+        >
           <Image source={avatarUrl} style={styles.photo} />
           <View style={styles.textBox}>
-            <Text style={styles.name}>{user.login}</Text>
+            <Text style={styles.name}>{user.name}</Text>
             <Text style={styles.email}>{user.email}</Text>
           </View>
+        </TouchableOpacity>
+        <View>
+          <Text
+            style={{ fontSize: 20, fontWeight: "bold", textAlign: "center" }}
+          >
+            Пости
+          </Text>
+          <FlatList
+            data={data}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <View
+                style={{
+                  backgroundColor: "#f0f0f0",
+                  padding: 10,
+                  margin: 10,
+                  borderRadius: 8,
+                }}
+              >
+                <Image
+                  source={{ uri: item.data.image }}
+                  style={{ width: 200, height: 200, borderRadius: 8 }}
+                />
+                <Text style={{ fontSize: 18, fontWeight: "bold" }}>
+                  {item.data.title}
+                </Text>
+                <Text style={{ fontSize: 16, color: "gray" }}>
+                  {item.data.location}
+                </Text>
+              </View>
+            )}
+          />
         </View>
         <View style={styles.footer}>
           <TouchableOpacity>

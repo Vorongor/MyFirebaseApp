@@ -1,13 +1,15 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
 import avatarUrl from "../img/Rectangle.jpg";
+import { useState } from "react";
+import { useEffect } from "react";
+import { getDataFromFirestore } from "../db/data";
 
 const Post = () => {
-  return (
-    <View style={styles.userContainer}>
-     
-    </View>
-  );
+  const [data, setData] = useState(null);
+  const id = "gIMgFA1d1SipeTipt2GQ";
+
+  return <View style={styles.userContainer}></View>;
 };
 const styles = StyleSheet.create({
   userContainer: {

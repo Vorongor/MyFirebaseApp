@@ -20,7 +20,7 @@ const UserBlock = ({ navigation }) => {
         <View style={styles.box}>
           <Image source={avatarUrl} style={styles.photo} />
           <View style={styles.textBox}>
-            <Text style={styles.name}>{user.login}</Text>
+            <Text style={styles.name}>{user.name}</Text>
             <Text style={styles.email}>{user.email}</Text>
           </View>
         </View>

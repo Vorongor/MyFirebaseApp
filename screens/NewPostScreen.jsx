@@ -11,9 +11,13 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Svg, Path } from "react-native-svg";
 import * as ImagePicker from "expo-image-picker";
+import { auth } from "../db/config";
+import { writeDataToFirestore } from "../db/data";
 
 const NewPostsScreen = ({ navigation }) => {
   const [image, setImage] = useState(null);
+  const [title, setTitle] = useState(null);
+  const [location, setLocation] = useState(null);
 
   const handleChoosePhoto = async () => {
     const options = {
@@ -31,8 +35,33 @@ const NewPostsScreen = ({ navigation }) => {
       quality: 1,
     });
 
-    if (!result.canceled) {
-      setImage(result.uri);
+    if (!result.cancelled) {
+      setImage(result.assets[0].uri);
+      console.log(image);
+    }
+  };
+
+  const handleCreatePost = async () => {
+    if (image && title && location) {
+      const user = await auth.currentUser;
+      const newPost = {
+        image,
+        title,
+        location,
+        ownerId: user.uid,
+      };
+
+      writeDataToFirestore(newPost);
+
+      setImage(null);
+      setTitle("");
+      setLocation("");
+      // Відправте новий пост до Redux або збережіть його в іншому стані, в залежності від вашої архітектури додатка
+      // dispatch(createPost(newPost));
+
+      navigation.navigate("Home");
+    } else {
+      alert("Будь ласка, заповніть всі поля.");
     }
   };
 
@@ -71,6 +100,7 @@ const NewPostsScreen = ({ navigation }) => {
         <View style={styles.box}>
           <View>
             <TouchableOpacity style={styles.upload} onPress={handleChoosePhoto}>
+              {image && <Image source={{ uri: image }} style={styles.image} />}
               <View style={styles.circle}>
                 <Svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -99,7 +129,8 @@ const NewPostsScreen = ({ navigation }) => {
               <TextInput
                 placeholder="Назва..."
                 style={styles.input}
-                //   onChangeText={(text) => setEmail(text)}
+                value={title}
+                onChangeText={(text) => setTitle(text)}
               />
             </KeyboardAvoidingView>
             <KeyboardAvoidingView
@@ -134,12 +165,12 @@ const NewPostsScreen = ({ navigation }) => {
                 <TextInput
                   placeholder="Місцевість..."
                   style={styles.inputLoc}
-                  // paddingLeft='24'
-                  //   onChangeText={(text) => setEmail(text)}
+                  value={location}
+                  onChangeText={(text) => setLocation(text)}
                 />
               </View>
             </KeyboardAvoidingView>
-            <TouchableOpacity style={styles.public}>
+            <TouchableOpacity style={styles.public} onPress={handleCreatePost}>
               <Text>Опублікувати</Text>
             </TouchableOpacity>
           </View>
@@ -225,7 +256,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  image: {
+    width: "100%",
+    height: "100%",
+  },
   circle: {
+    position: 'absolute',
     width: 60,
     height: 60,
     borderBottomLeftRadius: 30,
@@ -241,7 +277,7 @@ const styles = StyleSheet.create({
   },
   input: {
     padding: 16,
-    color: "#BDBDBD",
+    color: "#000",
     borderBottomColor: "#BDBDBD",
     borderBottomWidth: 1,
   },
@@ -253,7 +289,7 @@ const styles = StyleSheet.create({
   inputLoc: {
     padding: 16,
     paddingLeft: 48,
-    color: "#BDBDBD",
+    color: "#000",
     borderBottomColor: "#BDBDBD",
     borderBottomWidth: 1,
   },
